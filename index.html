@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulador de Estabilidad y Presión - TOPTEC I+D</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #18212f;
+      background: #f4f7fb;
+    }
+    body { margin: 0; padding: 22px; }
+    .wrap { max-width: 1200px; margin: auto; }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo-badge {
+      background: #3a3a3a;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .logo-badge .toptec { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; line-height: 1; }
+    .logo-badge .slogan { font-size: 0.65rem; color: #d1d5db; margin-top: 3px; font-style: italic; }
+    .tag { background: #2563eb; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
+    h1 { font-size: clamp(1.2rem, 2.5vw, 1.7rem); margin: 0 0 4px; }
+    .sub { color: #526174; margin: 0; font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: 18px; }
+    .panel { background: white; border: 1px solid #dce4ee; border-radius: 14px; padding: 18px; box-shadow: 0 3px 12px #1a2b460a; }
+    label { display: block; font-weight: 650; margin: 12px 0 4px; font-size: 0.9rem; }
+    .row { display: flex; align-items: center; gap: 10px; }
+    .row input[type=range] { flex: 1; min-width: 0; accent-color: #2563eb; }
+    input[type=number] { width: 85px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 7px; }
+    .muted { color: #64748b; font-size: 0.82rem; margin-top: 10px; line-height: 1.4; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .metric { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; }
+    .metric .k { font-size: 0.78rem; color: #64748b; }
+    .metric .v { font-size: 1.1rem; font-weight: 750; margin-top: 2px; color: #0f172a; }
+    .status { padding: 12px; border-radius: 10px; font-weight: 800; margin-top: 12px; text-align: center; font-size: 1.05rem; }
+    .ok { background: #dcfce7; color: #166534; }
+    .bad { background: #fee2e2; color: #991b1b; }
+    .warn { background: #fef3c7; color: #92400e; }
+    canvas { display: block; width: 100%; height: auto; background: linear-gradient(#f8fafc, #edf2f7); border-radius: 10px; border: 1px solid #e2e8f0; }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0; font-size: 0.85rem; color: #475569; font-weight: 600; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+    button { border: 1px solid #cbd5e1; background: white; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
+    button:hover { background: #f1f5f9; }
+    .note { font-size: 0.88rem; line-height: 1.5; color: #475569; margin-bottom: 8px; }
+    .glossary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
+    .glossary-item { background: #f1f5f9; padding: 10px; border-radius: 8px; font-size: 0.85rem; }
+    .glossary-item strong { color: #1e293b; display: block; margin-bottom: 3px; }
+    @media(max-width: 850px) {
+      .grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .head { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .glossary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <div>
+      <h1>Simulador de Inclinación, Estabilidad y Presión Hidrostática</h1>
+      <p class="sub">Tanque Tipo Vaso (1000 Litros) en Plano Inclinado con Derrame Pasivo</p>
+    </div>
+    <div class="brand">
+      <div class="logo-badge">
+        <div class="toptec">TOPTEC</div>
+        <div class="slogan">Es fácil construir</div>
+      </div>
+      <span class="tag">Grupo de I+D</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2 style="font-size:1.1rem; margin:0 0 10px;">Parámetros del Tanque</h2>
+      
+      <label for="angle">Inclinación (θ)</label>
+      <div class="row">
+        <input id="angle" type="range" min="0" max="60" step="1" value="0">
+        <strong id="angleText">0°</strong>
+      </div>
+
+      <label for="fill">Volumen inicial de agua (L)</label>
+      <div class="row">
+        <input id="fill" type="range" min="0" max="1000" step="10" value="1000">
+        <input id="fillN" type="number" min="0" max="1000" step="10" value="1000">
+      </div>
+
+      <label for="d1">Diámetro exterior base D1 (m)</label>
+      <div class="row">
+        <input id="d1" type="range" min="0.5" max="1.5" step="0.01" value="0.96">
+        <input id="d1N" type="number" min="0.5" max="1.5" step="0.01" value="0.96">
+      </div>
+
+      <label for="d">Diámetro exterior boca D2 (m)</label>
+      <div class="row">
+        <input id="d" type="range" min="0.6" max="1.8" step="0.01" value="1.25">
+        <input id="dN" type="number" min="0.6" max="1.8" step="0.01" value="1.25">
+      </div>
+
+      <label for="h">Altura total H (m)</label>
+      <div class="row">
+        <input id="h" type="range" min="0.6" max="2" step="0.01" value="1.13">
+        <input id="hN" type="number" min="0.6" max="2" step="0.01" value="1.13">
+      </div>
+
+      <label for="th">Espesor de pared (mm)</label>
+      <div class="row">
+        <input id="th" type="range" min="2" max="25" step="1" value="2">
+        <input id="thN" type="number" min="2" max="25" step="1" value="2">
+      </div>
+
+      <label for="mass">Masa tanque vacío (kg)</label>
+      <div class="row">
+        <input id="mass" type="range" min="5" max="100" step="0.5" value="13.5">
+        <input id="massN" type="number" min="5" max="100" step="0.5" value="13.5">
+      </div>
+
+      <button id="reset">Restablecer Valores Iniciales</button>
+      <p class="muted">Desarrollado para la evaluación de desempeño de recipientes en almacenamiento industrial.</p>
+    </section>
+
+    <section class="panel">
+      <canvas id="view" width="850" height="520" aria-label="Corte transversal del tanque inclinado"></canvas>
+      
+      <div class="legend">
+        <span><i class="dot" style="background:#2d9cdb"></i>Agua retenida</span>
+        <span><i class="dot" style="background:#f59e0b"></i>CG agua</span>
+        <span><i class="dot" style="background:#8b5cf6"></i>CG tanque</span>
+        <span><i class="dot" style="background:#dc2626"></i>CG total</span>
+        <span><i class="dot" style="background:#ef4444"></i>Presión hidrostática</span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="k">Agua Retenida</div><div class="v" id="liters">1000 L</div></div>
+        <div class="metric"><div class="k">Agua Derramada</div><div class="v" id="spilled">0 L</div></div>
+        <div class="metric"><div class="k">Masa Total</div><div class="v" id="totalMass">1013.5 kg</div></div>
+        <div class="metric"><div class="k">Presión Máxima Pared</div><div class="v" id="pmax">11.1 kPa</div></div>
+        <div class="metric"><div class="k">Empuje Lateral Agua</div><div class="v" id="fpush">2.45 kN</div></div>
+        <div class="metric"><div class="k">Margen al Vuelco</div><div class="v" id="margin">0.48 m</div></div>
+      </div>
+
+      <div id="status" class="status ok">ESTABLE</div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:18px;">
+    <h2 style="font-size:1.1rem; margin:0 0 10px;">Guía Explicativa de Variables y Modelo Físico</h2>
+    
+    <div class="glossary-grid">
+      <div class="glossary-item">
+        <strong>CG de Agua (Centro de Gravedad del Fluido)</strong>
+        Es el centro numérico de la masa de agua que permanece dentro del tanque. Al inclinarse el tanque, el agua se redistribuye formando una cuña y baja su centro de masa, actuando como un contrapeso inferior.
+      </div>
+      <div class="glossary-item">
+        <strong>CG del Tanque (Centro de Gravedad Estructural)</strong>
+        Punto donde se concentra el peso propio del tanque vacío. El cálculo considera un mayor grosor estructural en la base respecto al borde superior.
+      </div>
+      <div class="glossary-item">
+        <strong>CG Total (Centro de Gravedad Combinado)</strong>
+        Es el centro de masa del sistema completo (Tanque + Agua remanente). La posición relativa de este punto respecto a la arista inferior determina la estabilidad al vuelco.
+      </div>
+      <div class="glossary-item">
+        <strong>Presión Máxima en la Pared (P_máx)</strong>
+        Es la presión ejercida en la esquina o junta inferior sumergida del tanque (p_máx = ρ · g · h_máx). Es donde la columna vertical de agua logra su mayor profundidad.
+      </div>
+      <div class="glossary-item">
+        <strong>Empuje Lateral de Agua (F_empuje)</strong>
+        Fuerza total resultante ejercida por la cuña de agua perpendicularmente contra la pared inclinada inferior. Intenta flexionar o deformar la pared del tanque.
+      </div>
+      <div class="glossary-item">
+        <strong>Margen al Vuelco</strong>
+        Distancia entre la proyección vertical del CG Total y el borde extremo de apoyo de la base. Si este valor llega a 0 m o es negativo, ocurre el colapso por vuelco.
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const controls = ['fill', 'd1', 'd', 'h', 'th', 'mass'];
+
+controls.forEach(id => {
+  $(id).addEventListener('input', () => { $(id+'N').value = $(id).value; update(); });
+  $(id+'N').addEventListener('input', () => {
+    let v = Number($(id+'N').value);
+    if (Number.isFinite(v)) { $(id).value = v; update(); }
+  });
+});
+
+$('angle').addEventListener('input', update);
+$('reset').addEventListener('click', () => {
+  const defaults = { angle:0, fill:1000, d1:0.96, d:1.25, h:1.13, th:2, mass:13.5 };
+  for (const [id, v] of Object.entries(defaults)) {
+    $(id).value = v;
+    if ($(id+'N')) $(id+'N').value = v;
+  }
+  update();
+});
+
+function params() {
+  return {
+    theta: Number($('angle').value) * Math.PI / 180,
+    fill: Number($('fill').value) / 1000,
+    r0: Number($('d1').value) / 2,
+    r1: Number($('d').value) / 2,
+    H: Number($('h').value),
+    th: Number($('th').value) / 1000,
+    mt: Number($('mass').value),
+    rho: 1000,
+    g: 9.81
+  };
+}
+
+function radiusInt(z, p) {
+  const r0_i = p.r0 - p.th;
+  const r1_i = p.r1 - p.th;
+  return r0_i + (r1_i - r0_i) * z / p.H;
+}
+
+function diskCut(r, a) {
+  if (a <= -r) return [0, 0];
+  if (a >= r) return [Math.PI * r * r, 0];
+  const s = Math.sqrt(Math.max(0, r * r - a * a));
+  const A = a * s + r * r * (Math.asin(a / r) + Math.PI / 2);
+  const M = -(2/3) * Math.pow(Math.max(0, r * r - a * a), 1.5);
+  return [A, M];
+}
+
+function integrate(level, p) {
+  const N = 600, dz = p.H / N;
+  const s = Math.sin(p.theta), c = Math.cos(p.theta);
+  let V = 0, Mx = 0, Mz = 0, maxH = 0;
+
+  for (let i = 0; i < N; i++) {
+    const z = (i + 0.5) * dz;
+    const r = radiusInt(z, p);
+    let A, M;
+    if (Math.abs(s) < 1e-9) {
+      if (z * c <= level) { A = Math.PI * r * r; M = 0; }
+      else { A = 0; M = 0; }
+    } else {
+      const a = (level - z * c) / s;
+      [A, M] = diskCut(r, a);
+    }
+    V += A * dz;
+    Mx += M * dz;
+    Mz += z * A * dz;
+
+    if (A > 0) {
+      const hVert = (level - z * c + r * s) / Math.max(c, 1e-5);
+      if (hVert > maxH) maxH = hVert;
+    }
+  }
+  return { V, x: V ? Mx / V : 0, z: V ? Mz / V : 0, maxH };
+}
+
+function fullVolInt(p) {
+  const r0_i = p.r0 - p.th, r1_i = p.r1 - p.th;
+  return Math.PI * p.H / 3 * (r0_i * r0_i + r0_i * r1_i + r1_i * r1_i);
+}
+
+function solveLevel(target, p, lo, hi) {
+  for (let i = 0; i < 40; i++) {
+    let mid = (lo + hi) / 2;
+    if (integrate(mid, p).V < target) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function calc(p) {
+  const cap = fullVolInt(p);
+  const target = Math.min(p.fill, cap);
+  const s = Math.sin(p.theta), c = Math.cos(p.theta);
+  const lowRimInt = p.r1 - p.th;
+  const overflowLevel = p.H * c - lowRimInt * s;
+
+  let level, liq, spilled = 0;
+  if (p.theta < 1e-8) {
+    level = solveLevel(target, p, 0, p.H + 1);
+    liq = integrate(level, p);
+  } else {
+    const maxAtRim = integrate(overflowLevel, p).V;
+    if (target > maxAtRim) {
+      level = overflowLevel;
+      liq = integrate(level, p);
+      spilled = Math.max(0, target - liq.V);
+    } else {
+      level = solveLevel(target, p, -p.r1 - 1, p.H + 1);
+      liq = integrate(level, p);
+    }
+  }
+
+  spilled += Math.max(0, p.fill - cap);
+  const mwater = liq.V * p.rho;
+  const zTank = p.H * 0.42;
+  const mtot = p.mt + mwater;
+  const xCombined = (mwater * liq.x) / Math.max(mtot, 1e-12);
+  const zCombined = (p.mt * zTank + mwater * liq.z) / Math.max(mtot, 1e-12);
+
+  const xp = xCombined - zCombined * Math.tan(p.theta);
+  const margin = p.r0 - Math.abs(xp);
+
+  const pMax = p.rho * p.g * liq.maxH / 1000;
+  const areaWetted = liq.V > 0 ? (liq.V / p.H) * 2.8 : 0;
+  const fPush = (pMax * 1000 / 2) * areaWetted / 1000;
+
+  return { cap, level, liq, spilled, mwater, mtot, xCombined, zCombined, xp, margin, pMax, fPush };
+}
+
+function draw(p, r) {
+  const cv = $('view'), ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  const cx = 425, cy = 410;
+  const scale = Math.min(250 / (p.H + 0.2), 310 / (2 * Math.max(p.r0, p.r1) + 0.2));
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-p.theta);
+
+  const X = x => x * scale, Y = z => -z * scale;
+  const rb = p.r0, rt = p.r1, H = p.H, th = p.th;
+
+  // Plano Inclinado
+  ctx.strokeStyle = '#64748b'; ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(X(-rb - 0.4), Y(0));
+  ctx.lineTo(X(rb + 0.6), Y(0));
+  ctx.stroke();
+
+  // Contorno Externo e Interno del Tanque
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#334155';
+  ctx.fillStyle = '#cbd5e1';
+
+  ctx.beginPath();
+  ctx.moveTo(X(-rb), Y(0)); ctx.lineTo(X(-rt), Y(H));
+  ctx.lineTo(X(rt), Y(H)); ctx.lineTo(X(rb), Y(0));
+  ctx.closePath();
+  ctx.moveTo(X(-(rb - th)), Y(th)); ctx.lineTo(X(-(rt - th)), Y(H));
+  ctx.lineTo(X(rt - th), Y(H)); ctx.lineTo(X(rb - th), Y(th));
+  ctx.closePath();
+  ctx.fill('evenodd');
+  ctx.stroke();
+
+  // Región de Agua Retenida
+  const surfaceZ = x => (r.level - x * Math.sin(p.theta)) / Math.max(Math.cos(p.theta), 1e-8);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(X(-(rb - th)), Y(th));
+  ctx.lineTo(X(rb - th), Y(th));
+  ctx.lineTo(X(rt - th), Y(H));
+  ctx.lineTo(X(-(rt - th)), Y(H));
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.fillStyle = 'rgba(45, 156, 219, 0.55)';
+  const pts = [];
+  const r0_i = rb - th, r1_i = rt - th;
+  pts.push([-r0_i, th], [r0_i, th]);
+  pts.push([r1_i, Math.min(H, Math.max(th, surfaceZ(r1_i)))]);
+
+  for (let i = 100; i >= 0; i--) {
+    let x = r1_i + (-2 * r1_i) * i / 100;
+    let zz = surfaceZ(x);
+    if (zz >= th && zz <= H) pts.push([x, zz]);
+  }
+  pts.push([-r1_i, Math.min(H, Math.max(th, surfaceZ(-r1_i)))]);
+
+  ctx.beginPath();
+  pts.forEach((pt, i) => i ? ctx.lineTo(X(pt[0]), Y(pt[1])) : ctx.moveTo(X(pt[0]), Y(pt[1])));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Superficie Libre de Agua
+  const zL = surfaceZ(-rt), zR = surfaceZ(rt);
+  ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(X(-rt - 0.1), Y(zL)); ctx.lineTo(X(rt + 0.1), Y(zR));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Perfil de Presión Hidrostática (Vectores Rojos)
+  if (r.liq.V > 0) {
+    ctx.strokeStyle = '#ef4444'; ctx.fillStyle = '#ef4444'; ctx.lineWidth = 2;
+    const steps = 10;
+    for (let i = 0; i <= steps; i++) {
+      let zi = th + (H - th) * i / steps;
+      let xi = -(r0_i + (r1_i - r0_i) * zi / H);
+      let hVert = (r.level - zi * Math.cos(p.theta) - xi * Math.sin(p.theta)) / Math.max(Math.cos(p.theta), 1e-5);
+      if (hVert > 0) {
+        let pLen = (hVert / (p.H + 0.1)) * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(X(xi), Y(zi));
+        ctx.lineTo(X(xi - pLen), Y(zi));
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Marcadores de Centro de Gravedad
+  function dot(x, z, color, label) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(X(x), Y(z), 6, 0, Math.PI * 2); ctx.fill();
+    ctx.font = 'bold 12px system-ui';
+    ctx.fillText(label, X(x) + 8, Y(z) - 6);
+  }
+
+  if (r.liq.V > 0) dot(r.liq.x, r.liq.z, '#f59e0b', 'CG agua');
+  dot(0, p.H * 0.42, '#8b5cf6', 'CG tanque');
+  dot(r.xCombined, r.zCombined, '#dc2626', 'CG total');
+
+  // Línea Gravitatoria de Vuelco
+  ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  ctx.moveTo(X(r.xCombined), Y(r.zCombined));
+  ctx.lineTo(X(r.xp), Y(0));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Punto Pivote
+  ctx.fillStyle = r.margin >= 0 ? '#16a34a' : '#dc2626';
+  ctx.beginPath(); ctx.arc(X(r.xp), Y(0), 6, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
+
+  // Título e Indicador dentro del Canvas
+  ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px system-ui';
+  ctx.fillText('Corte 2D · Inclinación θ = ' + $('angle').value + '°', 20, 26);
+}
+
+function update() {
+  const p = params();
+  const r = calc(p);
+
+  $('angleText').textContent = $('angle').value + '°';
+  $('liters').textContent = (r.liq.V * 1000).toFixed(1) + ' L';
+  $('spilled').textContent = (r.spilled * 1000).toFixed(1) + ' L';
+  $('totalMass').textContent = r.mtot.toFixed(1) + ' kg';
+  $('pmax').textContent = r.pMax.toFixed(1) + ' kPa';
+  $('fpush').textContent = r.fPush.toFixed(2) + ' kN';
+  $('margin').textContent = r.margin.toFixed(3) + ' m';
+
+  const st = $('status');
+  if (r.margin < 0) {
+    st.className = 'status bad'; st.textContent = '¡DESPLOME / VUELCO!';
+  } else if (r.margin < 0.05) {
+    st.className = 'status warn'; st.textContent = 'PRECAUCIÓN: LÍMITE DE VUELCO';
+  } else {
+    st.className = 'status ok'; st.textContent = 'ESTABLE';
+  }
+
+  draw(p, r);
+}
+
+update();
+</script>
+</body>
+</html>
